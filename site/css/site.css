@@ -1,0 +1,44 @@
+/* Accessible contrast for mailto links */
+
+/* Footer: white underlined links on pink footer background */
+#footer-widget-area a[href^="mailto:"],
+#footer-widget-area a[href^="mailto:"]:visited,
+.site-footer a[href^="mailto:"],
+.site-footer a[href^="mailto:"]:visited,
+#colophon a[href^="mailto:"],
+#colophon a[href^="mailto:"]:visited {
+	color: #ffffff !important;
+	text-decoration: underline;
+	text-underline-offset: 0.12em;
+}
+
+#footer-widget-area a[href^="mailto:"]:hover,
+#footer-widget-area a[href^="mailto:"]:focus,
+.site-footer a[href^="mailto:"]:hover,
+.site-footer a[href^="mailto:"]:focus,
+#colophon a[href^="mailto:"]:hover,
+#colophon a[href^="mailto:"]:focus {
+	color: #ffffff !important;
+	background-color: rgba(0, 0, 0, 0.25);
+}
+
+/* Page content: darker red on light backgrounds for WCAG AA contrast */
+.entry-content a[href^="mailto:"],
+.long-description a[href^="mailto:"] {
+	color: #9e1e2e;
+	font-weight: 600;
+	text-decoration: underline;
+	text-underline-offset: 0.12em;
+}
+
+.entry-content a[href^="mailto:"]:visited,
+.long-description a[href^="mailto:"]:visited {
+	color: #7a1824;
+}
+
+.entry-content a[href^="mailto:"]:hover,
+.entry-content a[href^="mailto:"]:focus,
+.long-description a[href^="mailto:"]:hover,
+.long-description a[href^="mailto:"]:focus {
+	color: #5c1219;
+}

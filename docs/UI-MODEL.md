@@ -57,9 +57,8 @@ Every page shares the same outer structure:
 | About ACTS | `/about-acts/` | Static content page |
 | Children | `/children/` | Static content page |
 | Community Transformation | `/community-transformation/` | Static content page |
-| Donation/Support | `/donation/` | Has submenu |
-| ↳ Shoes for Students | `/donation/shoes-for-students/` | Sub-page |
-| Blog | `/blog/` | Post archive listing |
+| Donation/Support | `/donation/` | Static content page |
+| News | `/news/` | Post archive listing |
 
 ### 3.2 Secondary / utility navigation (`#toolbar`)
 
@@ -82,7 +81,7 @@ Every page shares the same outer structure:
 | `/shop/` | WooCommerce shop |
 | `/cart/` | Shopping cart |
 | `/2012/…` – `/2025/…` | Dated blog posts |
-| `/category/uncategorized/` | Blog category archive |
+| `/category/uncategorized/` | News category archive |
 | `/author/*/` | Author archives |
 
 ---
@@ -115,18 +114,17 @@ header (logo + nav)
 
 Each slide: full-bleed image, white `h1` + `h2`, bordered “Learn more” button.
 
-**Homepage widget row (4 cards):**
+**Homepage widget row (3 cards):**
 
 | Widget title | Image | Link |
 |--------------|-------|------|
 | Children | `home_children.jpg` | `/children/` |
 | Community Transformation | `home_community.jpg` | `/community/` |
-| Shoes for Students | `home-shoes.png` | `/donation/shoes-for-students/` |
 | Available Now! | `home_book.jpg` | `/product/tell-the-whole-world-that-i-am-real/` |
 
 ### 4.2 Interior static page
 
-Used by: About, Children, Community Transformation, Donation, Contact, Shoes for Students, etc.
+Used by: About, Children, Community Transformation, Donation, Contact, etc.
 
 ```
 #toolbar
@@ -150,7 +148,7 @@ header
 | `.teaser-page` | Full-width image (`hdr_*.jpg`) | Donation, Community Transformation, etc. |
 | `.teaser-page-list` | Solid brand color (`#e53b51`) | Contact, blog posts |
 
-### 4.3 Blog archive (`/blog/`)
+### 4.3 News archive (`/news/`)
 
 Same shell as interior page, but `#primary` contains:
 
@@ -168,7 +166,7 @@ article.list (repeated)
 
 Includes pagination (`.nav-previous` / `.nav-next`).
 
-### 4.4 Blog single post
+### 4.4 News single post
 
 ```
 .teaser-page-list
@@ -192,9 +190,8 @@ Includes pagination (`.nav-previous` / `.nav-next`).
 
 Sections within `.long-description`:
 
-1. **Child Sponsorship** — $20/month CTA copy
+1. **Child Sponsorship** — $30/month CTA copy
 2. **General Donations** — mission-aligned copy + PayPal donate form
-3. **Shoes for Students** — link to sub-page
 
 PayPal: hosted button (`hosted_button_id=KDP5FDVAHXF82`), image submit button.
 
@@ -276,20 +273,18 @@ Dropdown on single posts: Facebook, Twitter, Pinterest. Brand background bar.
 
 ### 5.8 Footer (`#colophon`)
 
-**Tertiary widgets (3 columns):**
+**Tertiary widgets (2 columns):**
 
 | Column | Widget | Content |
 |--------|--------|---------|
-| 1 | GuideStar seal | External transparency badge image |
-| 2 | Contact Us | Address, phone, email (`widget_wplook_address_widget`) |
-| 3 | Follow Us | Facebook icon link (`widget_wplooksocial`) |
+| 1 | Contact Us | Address, phone, email (`widget_wplook_address_widget`) |
+| 2 | Follow Us | Facebook icon link (`widget_wplooksocial`) |
 
 **Site info bar (`.site-info`):**
 
 | Column | Content |
 |--------|---------|
-| Left (`grid_8`) | “Copyright © 2016. All Rights reserved.” |
-| Right (`grid_8`) | “Designed by WPlook Studio” link |
+| Left (`grid_16`) | “Copyright © 2026. All Rights reserved.” |
 
 ---
 
@@ -366,7 +361,6 @@ Dropdown on single posts: Facebook, Twitter, Pinterest. Brand background bar.
 |-------|------------|
 | Mission Statement | Homepage only |
 | “Available Now!” book promo | Sidebar on ~all interior pages |
-| GuideStar seal | Footer |
 | Contact address block | Footer + Contact page |
 | Facebook follow | Toolbar + footer |
 
@@ -392,9 +386,8 @@ Dropdown on single posts: Facebook, Twitter, Pinterest. Brand background bar.
 | Community Transformation | Interior | Yes | Image header |
 | Community | Interior | Yes | Image header |
 | Donation/Support | Interior | Yes | Image header |
-| Shoes for Students | Interior | Yes | Image header |
-| Blog | Archive | Yes | Slider (same as home) |
-| Blog post | Single | Yes | Color bar + title |
+| News | Archive | Yes | Slider (same as home) |
+| News post | Single | Yes | Color bar + title |
 | Contact Us | Interior | Yes | Color bar |
 | Book / Product | Interior + WC | Yes | Varies |
 | Cart / Shop | WooCommerce | Yes | Varies |
@@ -403,7 +396,7 @@ Dropdown on single posts: Facebook, Twitter, Pinterest. Brand background bar.
 
 ## 10. Known UI quirks (current mirror)
 
-- Blog page reuses the **homepage slider** instead of a blog-specific hero.
+- News page reuses the **homepage slider** instead of a news-specific hero.
 - Some header images (`hdr_*.jpg`) reference live URLs and may not load offline.
 - Homepage slider thumbs still point to `actskids.org` absolute URLs.
 - Empty social icon slot in toolbar (placeholder `icon-` with no link).
@@ -423,8 +416,7 @@ site/
 ├── community-transformation/index.html
 ├── community/index.html
 ├── donation/index.html
-├── donation/shoes-for-students/index.html
-├── blog/index.html
+├── news/index.html
 ├── contact-us/index.html
 ├── cart/index.html
 ├── shop/index.html

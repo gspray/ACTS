@@ -1,0 +1,70 @@
+/* Homepage: three promo columns use full content width (after Shoes column removed) */
+body.home .first-home-widget-area,
+body.home .second-home-widget-area,
+body.home .forth-home-widget-area {
+	width: 32%;
+}
+
+body.home .first-home-widget-area {
+	margin-left: 0;
+}
+
+body.home .forth-home-widget-area {
+	margin-right: 0;
+}
+
+body.home .first-home-widget-area .textwidget img,
+body.home .second-home-widget-area .textwidget img,
+body.home .forth-home-widget-area .textwidget img {
+	max-width: 100%;
+	height: auto;
+}
+
+/* Mission Statement highlight */
+body.home .acts-mission-statement {
+	background: #fff;
+	border: 1px solid #e53b51;
+	border-left: 6px solid #e53b51;
+	box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+	margin: 0 0 40px;
+	padding: 28px 32px 24px;
+	text-align: center;
+}
+
+body.home .acts-mission-statement h3 {
+	color: #e53b51;
+	font-size: 1.75em;
+	letter-spacing: 0.04em;
+	margin: 0 0 16px;
+	text-transform: uppercase;
+}
+
+body.home .acts-mission-statement p {
+	color: #3b3b3d;
+	font-size: 1.125em;
+	line-height: 1.7;
+	margin: 0 auto;
+	max-width: 900px;
+}
+
+@media (max-width: 640px) {
+	body.home .first-home-widget-area,
+	body.home .second-home-widget-area,
+	body.home .forth-home-widget-area {
+		width: 98%;
+		margin-left: 1%;
+		margin-right: 1%;
+	}
+
+	body.home .acts-mission-statement {
+		padding: 20px 18px 18px;
+	}
+
+	body.home .acts-mission-statement h3 {
+		font-size: 1.35em;
+	}
+
+	body.home .acts-mission-statement p {
+		font-size: 1em;
+	}
+}
