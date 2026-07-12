@@ -51,7 +51,7 @@ if $SETUP; then
   ssh "${SSH_TARGET}" "bash -s" < scripts/setup-server.sh
 else
   info "Deploying ${SSH_TARGET}:${APP_DIR} from GitHub..."
-  ssh "${SSH_TARGET}" "bash ${APP_DIR}/scripts/deploy-server.sh"
+  ssh "${SSH_TARGET}" "cd ${APP_DIR} && bash -s" < scripts/deploy-server.sh
 fi
 
 info "Done."
