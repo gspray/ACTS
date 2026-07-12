@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "crawl": "node scripts/crawl.js"
+    "crawl": "node scripts/crawl.js",
+    "deploy": "bash scripts/deploy.sh",
+    "deploy:setup": "bash scripts/deploy.sh --setup"
   },
   "keywords": [],
   "author": "",

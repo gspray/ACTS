@@ -21,19 +21,28 @@ body.home .forth-home-widget-area .textwidget img {
 }
 
 /* Mission Statement highlight */
+body.home .acts-mission {
+	padding: 8px 0 12px;
+}
+
 body.home .acts-mission-statement {
 	background: #fff;
-	border: 1px solid #e53b51;
+	border: 1px solid #e8e8ea;
 	border-left: 6px solid #e53b51;
-	box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+	border-radius: 8px;
+	box-shadow:
+		0 2px 4px rgba(0, 0, 0, 0.06),
+		0 8px 24px rgba(0, 0, 0, 0.12),
+		0 16px 40px rgba(229, 59, 81, 0.12);
 	margin: 0 0 40px;
-	padding: 28px 32px 24px;
+	padding: 32px 36px 28px;
 	text-align: center;
 }
 
 body.home .acts-mission-statement h3 {
 	color: #e53b51;
 	font-size: 1.75em;
+	font-weight: 700;
 	letter-spacing: 0.04em;
 	margin: 0 0 16px;
 	text-transform: uppercase;
@@ -42,6 +51,7 @@ body.home .acts-mission-statement h3 {
 body.home .acts-mission-statement p {
 	color: #3b3b3d;
 	font-size: 1.125em;
+	font-weight: 600;
 	line-height: 1.7;
 	margin: 0 auto;
 	max-width: 900px;

@@ -152,7 +152,19 @@ Never run deploy scripts automatically. Deployment is always the user's decision
 
 Only deploy when the user explicitly asks (e.g. "deploy", "push to production").
 
-There is no built-in deploy pipeline in this repo. The GitHub remote is for version control, not hosting.
+Production URL: https://www.mysuperstitionmountain.com/acts/
+
+Deploy pulls from GitHub on the server — do not rsync or scp files from the local repo. See `docs/DEPLOY.md`.
+
+```bash
+# After commit + push:
+npm run deploy
+
+# One-time server bootstrap:
+npm run deploy:setup
+```
+
+Preflight requires a clean working tree and `main` pushed to `origin/main`.
 
 ## Small change requests
 

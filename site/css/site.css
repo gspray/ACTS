@@ -1,13 +1,15 @@
-/* Accessible contrast for mailto links */
-
-/* Footer: white underlined links on pink footer background */
+/* Mailto links in black */
 #footer-widget-area a[href^="mailto:"],
 #footer-widget-area a[href^="mailto:"]:visited,
 .site-footer a[href^="mailto:"],
 .site-footer a[href^="mailto:"]:visited,
 #colophon a[href^="mailto:"],
-#colophon a[href^="mailto:"]:visited {
-	color: #ffffff !important;
+#colophon a[href^="mailto:"]:visited,
+.entry-content a[href^="mailto:"],
+.entry-content a[href^="mailto:"]:visited,
+.long-description a[href^="mailto:"],
+.long-description a[href^="mailto:"]:visited {
+	color: #000000 !important;
 	text-decoration: underline;
 	text-underline-offset: 0.12em;
 }
@@ -17,28 +19,181 @@
 .site-footer a[href^="mailto:"]:hover,
 .site-footer a[href^="mailto:"]:focus,
 #colophon a[href^="mailto:"]:hover,
-#colophon a[href^="mailto:"]:focus {
-	color: #ffffff !important;
-	background-color: rgba(0, 0, 0, 0.25);
-}
-
-/* Page content: darker red on light backgrounds for WCAG AA contrast */
-.entry-content a[href^="mailto:"],
-.long-description a[href^="mailto:"] {
-	color: #9e1e2e;
-	font-weight: 600;
-	text-decoration: underline;
-	text-underline-offset: 0.12em;
-}
-
-.entry-content a[href^="mailto:"]:visited,
-.long-description a[href^="mailto:"]:visited {
-	color: #7a1824;
-}
-
+#colophon a[href^="mailto:"]:focus,
 .entry-content a[href^="mailto:"]:hover,
 .entry-content a[href^="mailto:"]:focus,
 .long-description a[href^="mailto:"]:hover,
 .long-description a[href^="mailto:"]:focus {
-	color: #5c1219;
+	color: #000000 !important;
+	background-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Compact footer with a single, uniform red */
+#colophon {
+	background: #e53b51 !important;
+	padding-top: 12px !important;
+	padding-bottom: 0 !important;
+}
+
+#footer-widget-area {
+	background: #e53b51;
+}
+
+#colophon #tertiary {
+	padding-bottom: 0;
+	padding-top: 0;
+}
+
+#colophon .widget,
+#colophon aside.widget {
+	margin-bottom: 6px !important;
+}
+
+#colophon .widget h3 {
+	margin-bottom: 6px !important;
+	line-height: 1.2;
+}
+
+#colophon .widget_adress h3.org,
+.widget_adress h3.org {
+	margin-bottom: 4px !important;
+	margin-top: 0 !important;
+	line-height: 1.2;
+}
+
+.site-footer .widget_adress {
+	font-size: 14px;
+	line-height: 1.35;
+}
+
+.site-footer .widget_adress .adr {
+	margin: 0 0 4px;
+}
+
+.site-footer .widget_adress address {
+	margin: 0;
+}
+
+#colophon .social-widget-margin a,
+#colophon .social-widget-margin a:visited {
+	margin-bottom: 0 !important;
+}
+
+#colophon #tertiary .container_16 {
+	display: flex;
+	justify-content: flex-start;
+	align-items: flex-start;
+	flex-wrap: wrap;
+	gap: 1.5rem 4rem;
+}
+
+#colophon #tertiary .grid_4 {
+	width: auto !important;
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+	float: none !important;
+}
+
+#colophon #tertiary > .container_16 > .clear {
+	display: none;
+}
+
+.site-info {
+	padding: 4px 0 !important;
+}
+
+.site-info .copy {
+	margin: 0 !important;
+}
+
+/* Footer address lines with phone/email aligned */
+.widget_adress .street-address {
+	display: inline;
+}
+
+.site-footer .widget_adress .adr {
+	margin: 0;
+	display: flex;
+	align-items: flex-start;
+	flex-wrap: wrap;
+	gap: 0.2rem 3rem;
+}
+
+.site-footer .widget_adress .footer-address-col {
+	display: flex;
+	flex-direction: column;
+}
+
+.site-footer .widget_adress .footer-contact-col {
+	display: flex;
+	flex-direction: column;
+	min-width: 14rem;
+}
+
+.site-footer .widget_adress .footer-line {
+	display: block;
+	width: auto;
+}
+
+.site-footer .widget_adress .footer-line + .footer-line {
+	margin-top: 0.2rem;
+}
+
+.site-footer .widget_adress .footer-phone,
+.site-footer .widget_adress .footer-email {
+	display: block;
+	white-space: nowrap;
+}
+
+.site-footer .widget_adress .footer-email {
+	margin-top: 0.2rem;
+}
+
+/* Donation page: photos side by side */
+.donation-photo-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+	margin: 1rem 0;
+}
+
+.donation-photo-row .wp-block-paragraph {
+	flex: 1 1 calc(50% - 0.5rem);
+	margin: 0;
+}
+
+.donation-photo-row img {
+	width: 100%;
+	height: auto;
+	display: block;
+}
+
+@media (max-width: 640px) {
+	.donation-photo-row .wp-block-paragraph {
+		flex: 1 1 100%;
+	}
+}
+
+/* Community Transformation page: 2x2 photo grid */
+.community-photo-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 1rem;
+	margin: 1rem 0;
+}
+
+.community-photo-grid .wp-block-paragraph {
+	margin: 0;
+}
+
+.community-photo-grid img {
+	width: 100%;
+	height: auto;
+	display: block;
+}
+
+@media (max-width: 640px) {
+	.community-photo-grid {
+		grid-template-columns: 1fr;
+	}
 }
