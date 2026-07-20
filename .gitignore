@@ -5,6 +5,7 @@ node_modules/
 dist/
 .env
 .env.*
+.deploy-bluehost.env
 
 # Cursor / local tooling
 .cursor/

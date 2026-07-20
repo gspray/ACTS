@@ -152,16 +152,23 @@ Never run deploy scripts automatically. Deployment is always the user's decision
 
 Only deploy when the user explicitly asks (e.g. "deploy", "push to production").
 
-Production URL: https://www.mysuperstitionmountain.com/acts/
+Production (MSM preview): https://www.mysuperstitionmountain.com/acts/  
+Staging (Bluehost): https://staging.actskids.org  
+Temp (Bluehost): https://website-6599f264.lid.ydn.mybluehost.me/  
 
-Deploy pulls from GitHub on the server — do not rsync or scp files from the local repo. See `docs/DEPLOY.md`.
+MSM deploy pulls from GitHub on the server — do not rsync from the laptop for MSM. See `docs/DEPLOY.md`.
+
+Bluehost staging rsyncs committed `site/` over SSH after the same preflight. See `docs/DEPLOY-BLUEHOST.md`.
 
 ```bash
-# After commit + push:
+# After commit + push — MSM preview:
 npm run deploy
 
-# One-time server bootstrap:
+# One-time MSM bootstrap:
 npm run deploy:setup
+
+# After commit + push — Bluehost staging:
+npm run deploy:staging
 ```
 
 Preflight requires a clean working tree and `main` pushed to `origin/main`.
