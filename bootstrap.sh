@@ -121,7 +121,9 @@ if [[ "$PKG" == "apt" ]]; then
   apt-get install -y ca-certificates curl gnupg ufw git nginx
 else
   dnf -y update
-  dnf -y install ca-certificates curl gnupg2 git nginx
+  # AL2023 ships curl-minimal; requesting "curl" conflicts with it. Use what's present.
+  dnf -y install ca-certificates gnupg2 git nginx
+  command -v curl >/dev/null 2>&1 || dnf -y install curl-minimal
   mkdir -p /var/www/html
 fi
 
