@@ -67,7 +67,6 @@ Every page shares the same outer structure:
 | Phone | `tel:` link | 559-287-1168 |
 | Contact | Icon link | `/contact-us/` |
 | Facebook | External | facebook.com/AfricaCommunityTransformationServicesKIDS |
-| Cart | Icon link | `/cart/` (WooCommerce) |
 | Donate | Text CTA | `/donation/` |
 
 ### 3.3 Additional routes (not in main nav)
@@ -77,9 +76,9 @@ Every page shares the same outer structure:
 | `/community/` | Alternate community landing (linked from homepage widget) |
 | `/contact-us/` | Address, phone, email |
 | `/tell-the-whole-world-that-i-am-real/` | Book landing page |
-| `/product/tell-the-whole-world-that-i-am-real/` | WooCommerce product |
-| `/shop/` | WooCommerce shop |
-| `/cart/` | Shopping cart |
+| `/product/tell-the-whole-world-that-i-am-real/` | Book product page (Amazon purchase link) |
+| `/shop/` | Book listing (browse only; buy via Amazon) |
+| `/cart/` | Redirect message → Amazon / product page |
 | `/2012/…` – `/2025/…` | Dated blog posts |
 | `/category/uncategorized/` | News category archive |
 | `/author/*/` | Author archives |
@@ -181,7 +180,6 @@ Includes pagination (`.nav-previous` / `.nav-next`).
         time.entry-date
         .category-i
         .author-i
-    #respond (comment form — posts to live WP endpoint)
   #secondary.grid_4
     widget: "Available Now!" book promo
 ```
@@ -197,7 +195,7 @@ PayPal: hosted button (`hosted_button_id=KDP5FDVAHXF82`), image submit button.
 
 ### 4.6 WooCommerce pages
 
-Shop, product, cart use WooCommerce markup layered on the same shell. Primary button color inherits brand accent (`#e53b51`). Product price color: `#77a464`.
+Shop and product pages keep WooCommerce markup for layout/price styling only. Purchases go to Amazon (`amazon.com/dp/163357069X`); cart/checkout UI has been removed. Primary button color inherits brand accent (`#e53b51`). Product price color: `#77a464`.
 
 ---
 
@@ -346,7 +344,6 @@ Dropdown on single posts: Facebook, Twitter, Pinterest. Brand background bar.
 | Sticky header | Theme JS | Scroll |
 | Mobile menu | MeanMenu | Viewport < ~768px |
 | Parallax teaser | Stellar.js | `data-stellar-background-ratio` on `.teaser-page` |
-| WooCommerce cart | WC JS | Add to cart, cart icon |
 | Share popups | Inline `onclick` | Facebook/Twitter/Pinterest window.open |
 | Contact Form 7 | CF7 | Contact forms (if present) |
 | PayPal donate | External form POST | Donation page |
@@ -389,8 +386,9 @@ Dropdown on single posts: Facebook, Twitter, Pinterest. Brand background bar.
 | News | Archive | Yes | Slider (same as home) |
 | News post | Single | Yes | Color bar + title |
 | Contact Us | Interior | Yes | Color bar |
-| Book / Product | Interior + WC | Yes | Varies |
-| Cart / Shop | WooCommerce | Yes | Varies |
+| Book / Product | Interior + WC layout | Yes | Varies |
+| Shop | Browse listing | Yes | Varies |
+| Cart | Amazon redirect message | No | Color bar |
 
 ---
 
@@ -400,8 +398,8 @@ Dropdown on single posts: Facebook, Twitter, Pinterest. Brand background bar.
 - Some header images (`hdr_*.jpg`) reference live URLs and may not load offline.
 - Homepage slider thumbs still point to `actskids.org` absolute URLs.
 - Empty social icon slot in toolbar (placeholder `icon-` with no link).
-- Comment forms post to live WordPress endpoint (non-functional locally).
-- WooCommerce checkout/donation flows require live backend.
+- Book purchase is via Amazon only; on-site WooCommerce cart/checkout leftovers were removed.
+- Comment and product review forms were removed (they posted to live WordPress).
 - `community/` and `community-transformation/` are separate routes with overlapping content.
 
 ---
