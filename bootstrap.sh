@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # bootstrap.sh — Provision a VPS for ACTS (Nginx + Node + PM2 + SSL)
 # Supports: Ubuntu/Debian (apt) and Amazon Linux 2023 (dnf)
+# Version: 2026-07-21c
 #
 # Usage (as root):
 #   curl -fsSL https://raw.githubusercontent.com/gspray/ACTS/main/bootstrap.sh | bash -s -- example.com you@example.com
