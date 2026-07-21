@@ -395,12 +395,13 @@ Dropdown on single posts: Facebook, Twitter, Pinterest. Brand background bar.
 ## 10. Known UI quirks (current mirror)
 
 - News page reuses the **homepage slider** instead of a news-specific hero.
-- Some header images (`hdr_*.jpg`) reference live URLs and may not load offline.
-- Homepage slider thumbs still point to `actskids.org` absolute URLs.
 - Empty social icon slot in toolbar (placeholder `icon-` with no link).
 - Book purchase is via Amazon only; on-site WooCommerce cart/checkout leftovers were removed.
 - Comment and product review forms were removed (they posted to live WordPress).
 - `community/` and `community-transformation/` are separate routes with overlapping content.
+- `og:url` and social share buttons still use `https://actskids.org/...` page URLs (correct after DNS cutover to the static site).
+- Contact Form 7 / xmlrpc / WP REST discovery / WP.com analytics scripts were removed for WordPress takedown readiness.
+- Local `server.js` returns real 404s for missing assets; directory routes serve each folder’s `index.html`.
 
 ---
 

@@ -42,15 +42,34 @@ function sendFile(res, filePath) {
 const server = http.createServer((req, res) => {
   const urlPath = decodeURIComponent(new URL(req.url, `http://localhost:${PORT}`).pathname);
   const safePath = path.normalize(urlPath).replace(/^(\.\.[/\\])+/, "");
-  let filePath = path.join(ROOT, safePath);
+  const relPath = safePath.replace(/^[/\\]+/, "");
+  const filePath = path.join(ROOT, relPath);
 
-  if (safePath.endsWith("/") || safePath === "") {
-    filePath = path.join(ROOT, "index.html");
+  function sendNotFound() {
+    res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("404 Not Found");
+  }
+
+  function tryDirectoryIndex(dirPath) {
+    const indexPath = path.join(dirPath, "index.html");
+    fs.stat(indexPath, (err, stats) => {
+      if (!err && stats.isFile()) {
+        sendFile(res, indexPath);
+        return;
+      }
+      // HTML navigations without an extension fall back to the homepage.
+      // Missing assets (css/js/images) return a real 404.
+      if (!path.extname(relPath) || safePath.endsWith("/")) {
+        sendFile(res, path.join(ROOT, "index.html"));
+        return;
+      }
+      sendNotFound();
+    });
   }
 
   fs.stat(filePath, (err, stats) => {
     if (!err && stats.isDirectory()) {
-      sendFile(res, path.join(filePath, "index.html"));
+      tryDirectoryIndex(filePath);
       return;
     }
 
@@ -59,7 +78,13 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    sendFile(res, path.join(ROOT, "index.html"));
+    // /about-acts (no trailing slash) → about-acts/index.html
+    if (!path.extname(relPath)) {
+      tryDirectoryIndex(filePath);
+      return;
+    }
+
+    sendNotFound();
   });
 });
 
