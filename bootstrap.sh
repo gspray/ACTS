@@ -121,9 +121,12 @@ if [[ "$PKG" == "apt" ]]; then
   apt-get install -y ca-certificates curl gnupg ufw git nginx
 else
   dnf -y update
-  # AL2023 ships curl-minimal; requesting "curl" conflicts with it. Use what's present.
-  dnf -y install ca-certificates gnupg2 git nginx
-  command -v curl >/dev/null 2>&1 || dnf -y install curl-minimal
+  # AL2023 ships curl-minimal + gnupg2-minimal. Installing full curl/gnupg2 conflicts.
+  # Only pull packages we actually need beyond the minimal base image.
+  dnf -y install git nginx
+  command -v curl >/dev/null 2>&1 || die "curl is missing (expected curl-minimal on AL2023)."
+  command -v gpg >/dev/null 2>&1 || command -v gpg2 >/dev/null 2>&1 \
+    || die "gpg is missing (expected gnupg2-minimal on AL2023)."
   mkdir -p /var/www/html
 fi
 
