@@ -42,8 +42,8 @@ jQuery(document).ready(function($){
 		hideDistantElements: true
 	});
 
-	/* Masonry */
-	jQuery(window).load(function() {
+	/* Masonry — jQuery 3 removed $(window).load(); use .on('load') */
+	jQuery(window).on('load', function() {
 		var jQuerycontainer = jQuery('.js-masonry');
 		jQuerycontainer.imagesLoaded(function(){
 			jQuerycontainer.masonry({
@@ -61,7 +61,7 @@ jQuery(document).ready(function($){
 	});
 
 	/* Flex Slider Teaser */
-	jQuery(window).load(function() {
+	jQuery(window).on('load', function() {
 		jQuery('.flexslider').flexslider({
 			animation: "fade",
 			animationLoop: true,

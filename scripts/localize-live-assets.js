@@ -29,6 +29,8 @@ const ASSETS = [
   '/wp-includes/blocks/paragraph/style.min.css',
   '/wp-includes/js/wp-emoji-release.min.js',
   '/wp-includes/js/wp-emoji-loader.min.js',
+  '/wp-includes/js/dist/hooks.min.js',
+  '/wp-includes/js/dist/i18n.min.js',
 ];
 
 function walk(dir, files = []) {

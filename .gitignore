@@ -2,7 +2,8 @@
 Thumbs.db
 *.log
 node_modules/
-dist/
+# Build output at repo root only (do not ignore site/wp-includes/js/dist/)
+/dist/
 .env
 .env.*
 .deploy-bluehost.env
