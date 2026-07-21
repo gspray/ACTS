@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# bootstrap.sh — Provision an Ubuntu/Debian VPS for ACTS (Nginx + Node + PM2 + SSL)
+# bootstrap.sh — Provision a VPS for ACTS (Nginx + Node + PM2 + SSL)
+# Supports: Ubuntu/Debian (apt) and Amazon Linux 2023 (dnf)
 #
 # Usage (as root):
 #   curl -fsSL https://raw.githubusercontent.com/gspray/ACTS/main/bootstrap.sh | bash -s -- example.com you@example.com
@@ -13,7 +14,7 @@
 #   BRANCH=main
 #   NODE_MAJOR=20
 #   SKIP_SSL=1          # install packages + Nginx HTTP only; skip certbot
-#   SKIP_FIREWALL=1     # do not enable ufw
+#   SKIP_FIREWALL=1     # do not change host firewall (Lightsail: use console rules)
 
 set -euo pipefail
 
@@ -24,7 +25,6 @@ APP_PORT="${APP_PORT:-3000}"
 REPO_URL="${REPO_URL:-https://github.com/gspray/ACTS.git}"
 BRANCH="${BRANCH:-main}"
 NODE_MAJOR="${NODE_MAJOR:-20}"
-APP_USER="${APP_USER:-www-data}"
 PM2_APP_NAME="${PM2_APP_NAME:-acts}"
 
 GREEN='\033[0;32m'
@@ -46,33 +46,104 @@ Examples:
 EOF
 }
 
+detect_os() {
+  if [[ -f /etc/os-release ]]; then
+    # shellcheck disable=SC1091
+    . /etc/os-release
+    OS_ID="${ID:-}"
+    OS_LIKE="${ID_LIKE:-}"
+  else
+    OS_ID=""
+    OS_LIKE=""
+  fi
+
+  if [[ "$OS_ID" == "amzn" ]] || [[ "$OS_LIKE" == *"fedora"* && "$OS_ID" == "amzn" ]]; then
+    PKG=dnf
+  elif [[ "$OS_ID" == "ubuntu" || "$OS_ID" == "debian" || "$OS_LIKE" == *"debian"* ]]; then
+    PKG=apt
+  elif command -v dnf >/dev/null 2>&1 && grep -qi 'amazon linux' /etc/os-release 2>/dev/null; then
+    PKG=dnf
+  elif command -v apt-get >/dev/null 2>&1; then
+    PKG=apt
+  else
+    die "Unsupported OS. Need Ubuntu/Debian (apt) or Amazon Linux (dnf)."
+  fi
+
+  if [[ "$PKG" == "dnf" ]]; then
+    APP_USER="${APP_USER:-nginx}"
+  else
+    APP_USER="${APP_USER:-www-data}"
+  fi
+
+  info "Detected package manager: ${PKG} (user: ${APP_USER})"
+}
+
+write_nginx_server_block() {
+  # Shared server block body (proxy to Node)
+  cat <<EOF
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${DOMAIN} www.${DOMAIN};
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/html;
+        default_type "text/plain";
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:${APP_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+EOF
+}
+
 [[ -n "$DOMAIN" ]] || { usage; exit 1; }
 [[ "$EUID" -eq 0 ]] || die "Run as root: sudo bash bootstrap.sh ${DOMAIN} ${CONTACT_EMAIL}"
 
-export DEBIAN_FRONTEND=noninteractive
+detect_os
 
 # ---------------------------------------------------------------------------
-# 1. Update the OS
+# 1. Update the OS + base packages
 # ---------------------------------------------------------------------------
 info "Updating OS packages..."
-apt-get update
-apt-get upgrade -y
-apt-get install -y ca-certificates curl gnupg ufw git nginx
+if [[ "$PKG" == "apt" ]]; then
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update
+  apt-get upgrade -y
+  apt-get install -y ca-certificates curl gnupg ufw git nginx
+else
+  dnf -y update
+  dnf -y install ca-certificates curl gnupg2 git nginx
+  mkdir -p /var/www/html
+fi
 
 # ---------------------------------------------------------------------------
 # 2. Install Node (NodeSource) + PM2
 # ---------------------------------------------------------------------------
 info "Installing Node.js ${NODE_MAJOR}.x from NodeSource..."
-install -m 0755 -d /etc/apt/keyrings
-if [[ ! -f /etc/apt/keyrings/nodesource.gpg ]]; then
-  curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
-    | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-fi
-cat >/etc/apt/sources.list.d/nodesource.list <<EOF
+if [[ "$PKG" == "apt" ]]; then
+  install -m 0755 -d /etc/apt/keyrings
+  if [[ ! -f /etc/apt/keyrings/nodesource.gpg ]]; then
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
+      | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+  fi
+  cat >/etc/apt/sources.list.d/nodesource.list <<EOF
 deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main
 EOF
-apt-get update
-apt-get install -y nodejs
+  apt-get update
+  apt-get install -y nodejs
+else
+  curl -fsSL "https://rpm.nodesource.com/setup_${NODE_MAJOR}.x" | bash -
+  dnf -y install nodejs
+fi
 
 info "Node $(node -v) / npm $(npm -v)"
 info "Installing PM2 globally..."
@@ -81,15 +152,18 @@ npm install -g pm2
 # ---------------------------------------------------------------------------
 # 3. Configure the firewall
 # ---------------------------------------------------------------------------
-if [[ "${SKIP_FIREWALL:-0}" != "1" ]]; then
+if [[ "${SKIP_FIREWALL:-0}" == "1" ]]; then
+  warn "SKIP_FIREWALL=1 — leaving host firewall unchanged."
+elif [[ "$PKG" == "apt" ]]; then
   info "Configuring UFW (OpenSSH + Nginx Full)..."
   ufw allow OpenSSH >/dev/null 2>&1 || true
   ufw allow 'Nginx Full' >/dev/null 2>&1 || true
-  # Enable non-interactively; ignore if already enabled
   ufw --force enable >/dev/null 2>&1 || true
   ufw status || true
 else
-  warn "SKIP_FIREWALL=1 — leaving UFW unchanged."
+  # Lightsail / AL2023: networking firewall is in the Lightsail console.
+  warn "Amazon Linux: open SSH (22), HTTP (80), and HTTPS (443) in Lightsail → Networking."
+  warn "Host firewall (firewalld) is left alone so Lightsail rules stay authoritative."
 fi
 
 # ---------------------------------------------------------------------------
@@ -109,41 +183,26 @@ fi
 [[ -f "${APP_DIR}/server.js" ]] || die "server.js missing after clone — check REPO_URL/BRANCH."
 [[ -f "${APP_DIR}/site/index.html" ]] || warn "site/index.html missing — app will fall back to project root."
 
+id "${APP_USER}" >/dev/null 2>&1 || die "App user ${APP_USER} does not exist."
 chown -R "${APP_USER}:${APP_USER}" "${APP_DIR}"
 
 # ---------------------------------------------------------------------------
 # 5. Configure Nginx (HTTP reverse proxy → Node on 127.0.0.1:PORT)
 # ---------------------------------------------------------------------------
 info "Writing Nginx site config for ${DOMAIN}..."
-NGINX_SITE="/etc/nginx/sites-available/acts"
-cat >"${NGINX_SITE}" <<EOF
-server {
-    listen 80;
-    listen [::]:80;
-    server_name ${DOMAIN} www.${DOMAIN};
-
-    # Allow certbot HTTP-01 challenges
-    location ^~ /.well-known/acme-challenge/ {
-        root /var/www/html;
-        default_type "text/plain";
-    }
-
-    location / {
-        proxy_pass http://127.0.0.1:${APP_PORT};
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-}
-EOF
-
-ln -sfn "${NGINX_SITE}" /etc/nginx/sites-enabled/acts
-# Disable default site if present so DOMAIN takes over
-rm -f /etc/nginx/sites-enabled/default
+if [[ "$PKG" == "apt" ]]; then
+  NGINX_SITE="/etc/nginx/sites-available/acts"
+  write_nginx_server_block >"${NGINX_SITE}"
+  ln -sfn "${NGINX_SITE}" /etc/nginx/sites-enabled/acts
+  rm -f /etc/nginx/sites-enabled/default
+else
+  # AL2023 ships a default server in nginx.conf; drop a dedicated conf.d file.
+  write_nginx_server_block >/etc/nginx/conf.d/acts.conf
+  # Neutralize the default catch-all so our server_name wins cleanly.
+  if [[ -f /etc/nginx/nginx.conf ]] && grep -q 'server_name\s\+_;' /etc/nginx/nginx.conf; then
+    sed -i 's/server_name  _;/server_name  localhost;/' /etc/nginx/nginx.conf || true
+  fi
+fi
 
 nginx -t
 systemctl enable nginx
@@ -153,8 +212,6 @@ systemctl restart nginx
 # 6. Start the app with PM2
 # ---------------------------------------------------------------------------
 info "Starting ACTS with PM2 on port ${APP_PORT}..."
-# Run PM2 as root but start the process as APP_USER via ecosystem-style env.
-# Persist under /root/.pm2 for a simple single-server bootstrap.
 cd "${APP_DIR}"
 PORT="${APP_PORT}" pm2 delete "${PM2_APP_NAME}" >/dev/null 2>&1 || true
 PORT="${APP_PORT}" pm2 start server.js \
@@ -167,7 +224,6 @@ PORT="${APP_PORT}" pm2 start server.js \
 # ---------------------------------------------------------------------------
 info "Enabling PM2 startup on boot..."
 pm2 save
-# pm2 startup prints a command; for systemd on Debian/Ubuntu this is enough:
 env PATH="$PATH:/usr/bin" pm2 startup systemd -u root --hp /root >/dev/null
 pm2 save
 
@@ -182,14 +238,22 @@ pm2 status
 if [[ "${SKIP_SSL:-0}" == "1" ]]; then
   warn "SKIP_SSL=1 — skipping Let's Encrypt. Site is HTTP-only for now."
 elif [[ -z "${CONTACT_EMAIL}" ]]; then
-  warn "No email provided — skipping SSL. Re-run with an email, or:"
-  warn "  apt-get install -y certbot python3-certbot-nginx"
-  warn "  certbot --nginx -d ${DOMAIN} -d www.${DOMAIN} --non-interactive --agree-tos -m you@example.com --redirect"
+  warn "No email provided — skipping SSL. Re-run with an email after DNS points here."
 else
   info "Installing certbot and requesting certificate for ${DOMAIN}..."
-  apt-get install -y certbot python3-certbot-nginx
+  if [[ "$PKG" == "apt" ]]; then
+    apt-get install -y certbot python3-certbot-nginx
+  else
+    dnf -y install certbot python3-certbot-nginx || {
+      warn "dnf certbot packages unavailable; installing via pip venv..."
+      dnf -y install python3 augeas-libs
+      python3 -m venv /opt/certbot
+      /opt/certbot/bin/pip install --upgrade pip
+      /opt/certbot/bin/pip install certbot certbot-nginx
+      ln -sfn /opt/certbot/bin/certbot /usr/bin/certbot
+    }
+  fi
 
-  # DNS must already point at this server for HTTP-01 to succeed.
   if certbot --nginx \
       -d "${DOMAIN}" \
       -d "www.${DOMAIN}" \
@@ -197,11 +261,13 @@ else
       --agree-tos \
       -m "${CONTACT_EMAIL}" \
       --redirect; then
-    info "TLS installed. Renewals are handled by certbot's systemd timer."
-    systemctl enable --now certbot.timer >/dev/null 2>&1 || true
+    info "TLS installed."
+    systemctl enable --now certbot-renew.timer >/dev/null 2>&1 \
+      || systemctl enable --now certbot.timer >/dev/null 2>&1 \
+      || true
   else
-    warn "certbot failed (usually DNS not pointing here yet)."
-    warn "After DNS propagates, run:"
+    warn "certbot failed (usually DNS not pointing here yet, or HTTPS 443 closed in Lightsail)."
+    warn "After DNS + firewall are ready:"
     warn "  certbot --nginx -d ${DOMAIN} -d www.${DOMAIN} --non-interactive --agree-tos -m ${CONTACT_EMAIL} --redirect"
   fi
 fi
