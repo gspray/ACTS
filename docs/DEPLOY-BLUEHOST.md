@@ -26,7 +26,7 @@ cat ~/.ssh/actskids_bluehost.pub
 Current public key:
 
 ```
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEmL7e74SOKJOp6SdybvIALjYci6uXdtT2DrDzgQ211Y acts-bluehost-deploy
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEtiOAchWt1IE+mUk7xrU7xo5BgACsY5KiAaX+CwYPzN acts-bluehost-deploy
 ```
 
 ### 2. Authorize in Bluehost cPanel
