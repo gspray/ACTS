@@ -153,9 +153,21 @@ rsync "${RSYNC_FLAGS[@]}" -e "${RSYNC_SSH}" \
   "${ROOT}/site/" \
   "${SSH_TARGET}:${REMOTE_DIR}/"
 
-# Ensure static DirectoryIndex for live public_html
+# Ensure static DirectoryIndex + no stale / cache for live public_html
 if [ "${TARGET}" = "prod" ] && ! $DRY_RUN; then
-  ${RSYNC_SSH} "${SSH_TARGET}" "test -f '${REMOTE_DIR}/.htaccess' || printf '%s\n' 'DirectoryIndex index.html' 'Options -Indexes' > '${REMOTE_DIR}/.htaccess'"
+  ${RSYNC_SSH} "${SSH_TARGET}" "cat > '${REMOTE_DIR}/.htaccess' <<'HTACCESS'
+DirectoryIndex index.html
+Options -Indexes
+
+RewriteEngine On
+RewriteRule ^\$ /index.html [L]
+
+<IfModule mod_headers.c>
+  Header set Cache-Control \"no-cache, no-store, must-revalidate\"
+  Header set Pragma \"no-cache\"
+  Header set Expires \"0\"
+</IfModule>
+HTACCESS"
 fi
 
 info "Done."
