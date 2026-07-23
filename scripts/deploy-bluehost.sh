@@ -33,7 +33,8 @@ SSH_KEY="${BLUEHOST_SSH_KEY:-$HOME/.ssh/actskids_bluehost}"
 
 # Prefer explicit staging/prod dirs; fall back to legacy BLUEHOST_REMOTE_DIR for staging
 BLUEHOST_STAGING_DIR="${BLUEHOST_STAGING_DIR:-${BLUEHOST_REMOTE_DIR:-/home4/actskids/public_html/staging}}"
-BLUEHOST_PROD_DIR="${BLUEHOST_PROD_DIR:-/home4/actskids/public_html/prod}"
+# Live actskids.org document root is public_html (static site cutover).
+BLUEHOST_PROD_DIR="${BLUEHOST_PROD_DIR:-/home4/actskids/public_html}"
 STAGING_URL="${BLUEHOST_STAGING_URL:-https://staging.actskids.org}"
 PROD_URL="${BLUEHOST_PROD_URL:-https://actskids.org}"
 TEMP_URL="${BLUEHOST_TEMP_URL:-https://lid.ydn.mybluehost.me/website_6599f264}"
@@ -49,7 +50,7 @@ Usage: bash scripts/deploy-bluehost.sh [staging|prod] [--dry-run] [--skip-prefli
 Rsync site/ to Bluehost over SSH after GitHub preflight.
 
   staging   Deploy to BLUEHOST_STAGING_DIR (default)
-  prod      Deploy to BLUEHOST_PROD_DIR (does not change DNS)
+  prod      Deploy to BLUEHOST_PROD_DIR (live actskids.org when docroot is public_html)
 
   --dry-run          Show rsync plan without transferring
   --skip-preflight   Skip clean/pushed checks (not for normal deploys)
@@ -120,16 +121,28 @@ RSYNC_SSH="ssh -i ${SSH_KEY} -o IdentitiesOnly=yes -o StrictHostKeyChecking=acce
 
 info "Environment: ${TARGET}"
 info "Target: ${SSH_TARGET}:${REMOTE_DIR}"
-info "Public URL (when DNS points here): ${PUBLIC_URL}"
+info "Public URL: ${PUBLIC_URL}"
 if [ "${TARGET}" = "prod" ]; then
-  warn "Prod deploy only updates files under ${REMOTE_DIR}."
-  warn "It does NOT change the actskids.org document root / DNS."
+  warn "Prod deploy updates ${REMOTE_DIR} (live site when that is the domain document root)."
 fi
 
 # Ensure remote directory exists
 ${RSYNC_SSH} "${SSH_TARGET}" "mkdir -p '${REMOTE_DIR}'"
 
 RSYNC_FLAGS=(-avz --delete --exclude '.git' --exclude '.DS_Store')
+# When deploying into public_html root, preserve staging/prod/temp hosts and SSL/.htaccess
+if [ "${TARGET}" = "prod" ]; then
+  RSYNC_FLAGS+=(
+    --exclude 'staging/'
+    --exclude 'prod/'
+    --exclude 'website_*/'
+    --exclude '.well-known/'
+    --exclude 'cgi-bin/'
+    --exclude '.htaccess'
+    --exclude '.ftpquota'
+    --exclude 'error_log'
+  )
+fi
 if $DRY_RUN; then
   RSYNC_FLAGS+=(--dry-run)
   warn "DRY RUN — no files will be written."
@@ -140,6 +153,11 @@ rsync "${RSYNC_FLAGS[@]}" -e "${RSYNC_SSH}" \
   "${ROOT}/site/" \
   "${SSH_TARGET}:${REMOTE_DIR}/"
 
+# Ensure static DirectoryIndex for live public_html
+if [ "${TARGET}" = "prod" ] && ! $DRY_RUN; then
+  ${RSYNC_SSH} "${SSH_TARGET}" "test -f '${REMOTE_DIR}/.htaccess' || printf '%s\n' 'DirectoryIndex index.html' 'Options -Indexes' > '${REMOTE_DIR}/.htaccess'"
+fi
+
 info "Done."
 if ! $DRY_RUN; then
   info "Verify:"
@@ -147,7 +165,7 @@ if ! $DRY_RUN; then
     info "  curl -sI ${STAGING_URL}/ | head -5"
     info "  curl -sI ${TEMP_URL}/ | head -5"
   else
-    info "  ssh ${BLUEHOST_SSH} \"ls -la '${REMOTE_DIR}' | head\""
-    info "  (actskids.org still serves WordPress until you change its document root)"
+    info "  curl -sI ${PROD_URL}/ | head -5"
+    info "  curl -sI ${PROD_URL}/news/ | head -5"
   fi
 fi
