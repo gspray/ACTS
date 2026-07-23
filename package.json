@@ -9,7 +9,8 @@
     "crawl": "node scripts/crawl.js",
     "deploy": "bash scripts/deploy.sh",
     "deploy:setup": "bash scripts/deploy.sh --setup",
-    "deploy:staging": "bash scripts/deploy-bluehost.sh"
+    "deploy:staging": "bash scripts/deploy-bluehost.sh staging",
+    "deploy:prod": "bash scripts/deploy-bluehost.sh prod"
   },
   "keywords": [],
   "author": "",

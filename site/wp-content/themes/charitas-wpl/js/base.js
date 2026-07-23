@@ -60,19 +60,46 @@ jQuery(document).ready(function($){
 		});
 	});
 
-	/* Flex Slider Teaser */
-	jQuery(window).on('load', function() {
-		jQuery('.flexslider').flexslider({
-			animation: "fade",
-			animationLoop: true,
-			pauseOnAction: true,
-			pauseOnHover: true,
-			controlNav: "thumbnails",
-			start: function(slider) {
-				jQuery( '.flexslider' ).removeClass('loading');
+	/* Flex Slider Teaser
+	 * Use window "load" via .on() (jQuery 3 removed $(window).load).
+	 * Clear .loading even if flexslider is missing or start never fires —
+	 * otherwise first visit can stick on the ajax-loader spinner.
+	 */
+	function actsInitHomeFlexslider() {
+		var $sliders = jQuery('.flexslider');
+		if (!$sliders.length) {
+			return;
+		}
+		if (typeof jQuery.fn.flexslider !== 'function') {
+			$sliders.removeClass('loading');
+			return;
+		}
+		$sliders.each(function () {
+			var $el = jQuery(this);
+			if ($el.data('flexslider')) {
+				$el.removeClass('loading');
+				return;
 			}
+			$el.flexslider({
+				animation: "fade",
+				animationLoop: true,
+				pauseOnAction: true,
+				pauseOnHover: true,
+				controlNav: "thumbnails",
+				start: function () {
+					$el.removeClass('loading');
+				}
+			});
 		});
-	});
+		setTimeout(function () {
+			jQuery('.flexslider.loading').removeClass('loading');
+		}, 2500);
+	}
+	if (document.readyState === 'complete') {
+		actsInitHomeFlexslider();
+	} else {
+		jQuery(window).on('load', actsInitHomeFlexslider);
+	}
 
 	/* Featured News Slider */
 	jQuery(window).ready(function() {

@@ -154,11 +154,12 @@ Only deploy when the user explicitly asks (e.g. "deploy", "push to production").
 
 Production (MSM preview): https://www.mysuperstitionmountain.com/acts/  
 Staging (Bluehost): https://staging.actskids.org  
+Prod folder (Bluehost): `/home4/actskids/public_html/prod` — deploy with `npm run deploy:prod`; domain cutover is manual  
 Temp (Bluehost): https://website-6599f264.lid.ydn.mybluehost.me/  
 
 MSM deploy pulls from GitHub on the server — do not rsync from the laptop for MSM. See `docs/DEPLOY.md`.
 
-Bluehost staging rsyncs committed `site/` over SSH after the same preflight. See `docs/DEPLOY-BLUEHOST.md`.
+Bluehost staging/prod rsync committed `site/` over SSH after the same preflight. See `docs/DEPLOY-BLUEHOST.md`.
 
 ```bash
 # After commit + push — MSM preview:
@@ -167,8 +168,9 @@ npm run deploy
 # One-time MSM bootstrap:
 npm run deploy:setup
 
-# After commit + push — Bluehost staging:
+# After commit + push — Bluehost:
 npm run deploy:staging
+npm run deploy:prod
 ```
 
 Preflight requires a clean working tree and `main` pushed to `origin/main`.

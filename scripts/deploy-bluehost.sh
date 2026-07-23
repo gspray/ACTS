@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy committed site/ to Bluehost staging via rsync over SSH.
+# Deploy committed site/ to Bluehost staging or prod via rsync over SSH.
 # Requires: .deploy-bluehost.env (see .deploy-bluehost.env.example)
 set -euo pipefail
 
@@ -23,43 +23,70 @@ if [ -f "${ENV_FILE}" ]; then
   source "${ENV_FILE}"
   set +a
 else
-  die "Missing ${ENV_FILE}. Copy .deploy-bluehost.env.example and fill in BLUEHOST_USER + BLUEHOST_REMOTE_DIR."
+  die "Missing ${ENV_FILE}. Copy .deploy-bluehost.env.example and fill in BLUEHOST_USER + remote dirs."
 fi
 
 BLUEHOST_SSH="${BLUEHOST_SSH:-actskids-bluehost}"
 BLUEHOST_HOST="${BLUEHOST_HOST:-lid.ydn.mybluehost.me}"
 BLUEHOST_USER="${BLUEHOST_USER:-}"
-BLUEHOST_REMOTE_DIR="${BLUEHOST_REMOTE_DIR:-}"
 SSH_KEY="${BLUEHOST_SSH_KEY:-$HOME/.ssh/actskids_bluehost}"
+
+# Prefer explicit staging/prod dirs; fall back to legacy BLUEHOST_REMOTE_DIR for staging
+BLUEHOST_STAGING_DIR="${BLUEHOST_STAGING_DIR:-${BLUEHOST_REMOTE_DIR:-/home4/actskids/public_html/staging}}"
+BLUEHOST_PROD_DIR="${BLUEHOST_PROD_DIR:-/home4/actskids/public_html/prod}"
 STAGING_URL="${BLUEHOST_STAGING_URL:-https://staging.actskids.org}"
+PROD_URL="${BLUEHOST_PROD_URL:-https://actskids.org}"
 TEMP_URL="${BLUEHOST_TEMP_URL:-https://lid.ydn.mybluehost.me/website_6599f264}"
 
+TARGET="staging"
 SKIP_PREFLIGHT=false
 DRY_RUN=false
-for arg in "$@"; do
-  case "$arg" in
-    --skip-preflight) SKIP_PREFLIGHT=true ;;
-    --dry-run) DRY_RUN=true ;;
-    --help|-h)
-      cat <<EOF
-Usage: bash scripts/deploy-bluehost.sh [--dry-run] [--skip-preflight]
 
-Rsync site/ to Bluehost staging over SSH after GitHub preflight.
+usage() {
+  cat <<EOF
+Usage: bash scripts/deploy-bluehost.sh [staging|prod] [--dry-run] [--skip-preflight]
+
+Rsync site/ to Bluehost over SSH after GitHub preflight.
+
+  staging   Deploy to BLUEHOST_STAGING_DIR (default)
+  prod      Deploy to BLUEHOST_PROD_DIR (does not change DNS)
 
   --dry-run          Show rsync plan without transferring
   --skip-preflight   Skip clean/pushed checks (not for normal deploys)
 
 Config: .deploy-bluehost.env (see .deploy-bluehost.env.example)
 EOF
-      exit 0
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    staging|prod) TARGET="$arg" ;;
+    --skip-preflight) SKIP_PREFLIGHT=true ;;
+    --dry-run) DRY_RUN=true ;;
+    --help|-h) usage; exit 0 ;;
+    *)
+      die "Unknown argument: ${arg} (use staging|prod, --dry-run, --skip-preflight)"
       ;;
   esac
 done
 
+case "${TARGET}" in
+  staging)
+    REMOTE_DIR="${BLUEHOST_STAGING_DIR}"
+    PUBLIC_URL="${STAGING_URL}"
+    ;;
+  prod)
+    REMOTE_DIR="${BLUEHOST_PROD_DIR}"
+    PUBLIC_URL="${PROD_URL}"
+    ;;
+  *)
+    die "TARGET must be staging or prod (got: ${TARGET})"
+    ;;
+esac
+
 [ -n "${BLUEHOST_USER}" ] && [ "${BLUEHOST_USER}" != "your_cpanel_username" ] \
   || die "Set BLUEHOST_USER in .deploy-bluehost.env (cPanel SSH username)."
-[ -n "${BLUEHOST_REMOTE_DIR}" ] \
-  || die "Set BLUEHOST_REMOTE_DIR in .deploy-bluehost.env (staging document root)."
+[ -n "${REMOTE_DIR}" ] || die "Remote dir for ${TARGET} is empty."
 [ -f "${SSH_KEY}" ] || die "SSH key not found: ${SSH_KEY}"
 [ -f site/index.html ] || die "site/index.html missing."
 
@@ -91,12 +118,16 @@ fi
 SSH_TARGET="${BLUEHOST_USER}@${BLUEHOST_HOST}"
 RSYNC_SSH="ssh -i ${SSH_KEY} -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
 
-info "Target: ${SSH_TARGET}:${BLUEHOST_REMOTE_DIR}"
-info "Staging URL: ${STAGING_URL}"
-info "Temp URL: ${TEMP_URL}"
+info "Environment: ${TARGET}"
+info "Target: ${SSH_TARGET}:${REMOTE_DIR}"
+info "Public URL (when DNS points here): ${PUBLIC_URL}"
+if [ "${TARGET}" = "prod" ]; then
+  warn "Prod deploy only updates files under ${REMOTE_DIR}."
+  warn "It does NOT change the actskids.org document root / DNS."
+fi
 
 # Ensure remote directory exists
-${RSYNC_SSH} "${SSH_TARGET}" "mkdir -p '${BLUEHOST_REMOTE_DIR}'"
+${RSYNC_SSH} "${SSH_TARGET}" "mkdir -p '${REMOTE_DIR}'"
 
 RSYNC_FLAGS=(-avz --delete --exclude '.git' --exclude '.DS_Store')
 if $DRY_RUN; then
@@ -104,14 +135,19 @@ if $DRY_RUN; then
   warn "DRY RUN — no files will be written."
 fi
 
-info "Rsyncing site/ → ${SSH_TARGET}:${BLUEHOST_REMOTE_DIR}/"
+info "Rsyncing site/ → ${SSH_TARGET}:${REMOTE_DIR}/"
 rsync "${RSYNC_FLAGS[@]}" -e "${RSYNC_SSH}" \
   "${ROOT}/site/" \
-  "${SSH_TARGET}:${BLUEHOST_REMOTE_DIR}/"
+  "${SSH_TARGET}:${REMOTE_DIR}/"
 
 info "Done."
 if ! $DRY_RUN; then
   info "Verify:"
-  info "  curl -sI ${TEMP_URL}/ | head -5"
-  info "  curl -sI ${STAGING_URL}/ | head -5"
+  if [ "${TARGET}" = "staging" ]; then
+    info "  curl -sI ${STAGING_URL}/ | head -5"
+    info "  curl -sI ${TEMP_URL}/ | head -5"
+  else
+    info "  ssh ${BLUEHOST_SSH} \"ls -la '${REMOTE_DIR}' | head\""
+    info "  (actskids.org still serves WordPress until you change its document root)"
+  fi
 fi
