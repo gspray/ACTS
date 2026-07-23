@@ -1,6 +1,10 @@
-/* If FlexSlider init is delayed, still show the first slide instead of only a spinner */
-body.home .flexslider.loading .slides > li:first-child {
-	display: block;
+/* Show first hero slide (and hide spinner gif) until FlexSlider finishes init */
+body.home #teaser .flexslider.loading {
+	background-image: none;
+}
+
+body.home #teaser .flexslider.loading .slides > li:first-child {
+	display: block !important;
 }
 
 /* Homepage: three promo columns use full content width (after Shoes column removed) */
